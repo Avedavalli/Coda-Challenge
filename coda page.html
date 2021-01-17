@@ -1,0 +1,366 @@
+<html>
+    <head>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css" 
+        rel="stylesheet" integrity="sha384-giJF6kkoqNQ00vy+HMDP7azOuL0xtbfIcaT9wjKHr8RbDVddVHyTfAAsrekwKmP1" 
+        crossorigin="anonymous">
+
+       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+        <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+        <script src='https://kit.fontawesome.com/a076d05399.js'></script>
+
+        <script src="https://unpkg.com/vue-router@2.0.0"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <style>
+        .sidenav {
+            height: 100%;
+            width: 160px;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #C4F4F3;
+            overflow-x: hidden;
+            padding-top: 20px;
+          }
+          
+          .sidenav a {
+            padding: 6px 8px 6px 16px;
+            text-decoration: none;
+            font-size: 25px;
+            color: #818181;
+            display: block;
+          }
+          
+          .sidenav a:hover {
+            color: #5c1fce;
+          }
+          .has-search .form-control {
+    padding-left: 2.375rem;
+}
+
+.has-search .form-control-feedback {
+    position: absolute;
+    z-index: 2;
+    display: block;
+    width: 2.375rem;
+    height: 2.375rem;
+    line-height: 2.375rem;
+    text-align: center;
+    pointer-events: none;
+    color: #aaa;
+}
+          .numberCircle {
+                border-radius: 50%;
+                width: 80px;
+                height: 80px;
+                padding: 8px;
+                
+                  margin-left: 40%;
+                background: rgb(20, 11, 11);
+                border: 2px solid rgb(24, 3, 3);
+                color: rgb(253, 249, 10);
+                text-align: center;
+
+                font: 50px Arial, sans-serif;
+          }
+          </style>
+
+          
+    </head>
+    <body>
+        <script type="module">
+           var app = new Vue({
+  el: '#app',
+  data: {
+   
+    checkedNames:[],
+    users:[],
+    usersCopy:[],
+    allSelected:false,
+    disable:false,
+    betBlock:false,
+    showStartButton:false,
+    n1:[],
+    n2:[],
+    betNum:0,
+    mid:0,
+    winIndex:0,
+    upper:false,
+    startIndex:0,
+    endIndex:7,
+    pageno:1,
+    searchText:'',
+    userName:'',
+    pages:0
+  },
+  methods:{
+    selectAll: function() {
+
+this.checkedNames = [];
+if (!this.allSelected) {
+  
+    for (var i = 0; i < this.users.length; i++) {
+        this.checkedNames.push(this.users[i].Name);
+    }
+
+}
+
+
+},
+sort(evnt, sortableValue){
+  var sortTypeVal = evnt.target.getAttribute("data-type");
+
+   this.usersCopy.sort((a, b) => a[sortableValue] !== b[sortableValue] ? 
+   (sortTypeVal == 'ASC' ? a[sortableValue] < b[sortableValue] 
+   : a[sortableValue] > b[sortableValue]) ? -1 : 1 : 0);
+sortTypeVal == "ASC" ? evnt.target.setAttribute("data-type", "DESC") : 
+evnt.target.setAttribute("data-type", "ASC")
+},
+startBet(){
+ 
+  var num=Math.floor(Math.random() * 9) + 1
+  this.betNum=num;
+  for(var i=0;i < this.checkedNames.length;i++){
+    if (num==this.checkedNames[i].Bet){
+          this.checkedNames[i].Price=(this.checkedNames[i].Price)*2
+          this.checkedNames[i].Wins+=1
+          this.checkedNames[i].Level+=1
+    }
+    else{
+      this.checkedNames[i].Lost+=1
+    
+    }
+  }
+  this.betBlock=true;
+  var arr=[]
+  for(var i=0;i < this.checkedNames.length;i++){
+        arr.push(this.checkedNames[i].Price)
+  }
+ 
+ 
+  console.log('index',this.winIndex)
+  var y=this.checkedNames.length;
+  this.mid=Math.round(y/2);
+  this.n1=this.checkedNames.slice(0,this.mid);
+  this.n2=this.checkedNames.slice(this.mid,y);
+  var max1=Math.max(...arr.slice(0,this.mid))
+  var index1=arr.slice(0,this.mid).findIndex(k => k==max1)
+  var max2=Math.max(...arr.slice(this.mid,y));
+  var index2=arr.slice(this.mid,y).findIndex(k => k==max2);
+  if (max1 >max2){this.winIndex=index1;
+  this.upper=true}
+  else{this.winIndex=index2;
+    this.upper=false}
+},
+checkBox(data,event){
+           console.log(this.checkedNames)
+            if (this.checkedNames.length >= 2 && this.checkedNames.length<=9) {
+        
+                this.showStartButton=true
+            }
+            else {
+              this.showStartButton=false;
+            }
+        },
+        back(){
+          this.betBlock=false;
+        },
+        searchingUser(){
+          var data=this.users.slice(this.startIndex,this.endIndex)
+          if(this.userName!=''){
+         this.usersCopy=this.users.filter(d => d.Name.toLowerCase().startsWith(this.userName.toLowerCase()));   
+          }
+          else{
+            this.usersCopy=data;
+          }
+          
+        },
+        showTable(x){
+               if(x=='pre'){
+               
+                   this.endIndex=this.startIndex-1;
+                   this.startIndex=this.endIndex-7;
+                   this.pageno-=1
+                 
+               }
+               else{
+                 this.startIndex=this.endIndex+1;
+                 this.endIndex=this.startIndex+7;
+                 this.pageno+=1
+               }
+               this.usersCopy=this.users.slice(this.startIndex,this.endIndex+1)
+              
+        }
+
+  },
+  mounted(){
+      axios.get('https://s3-ap-southeast-1.amazonaws.com/he-public-data/bets7747a43.json')
+      .then(res =>{ this.users=res.data;
+        this.pages=Math.round(this.users.length/8)
+        this.usersCopy=this.users.slice(0,8)
+        var res=this.users.map(item => {
+        item['Image']=item['Profile Image'];
+        item['Wins']=0;
+       item['Lost']=0;
+       item['Level']=0;
+        delete item['Profile Image'];
+        
+      });
+      
+      }
+      );
+     
+      
+  }
+})
+        </script>
+        
+
+        <div id="app">
+          <div v-if="betBlock">
+            <i class="fa fa-refresh" style="font-size:36px;color: #5c1fce;margin-left: 45%;margin-top: 3%;margin-right: 10%;" @click="startBet"></i>
+          <div  style="margin-left: 10%;margin-top:2%;margin-right: 5%;"> 
+           
+            <div class="row">
+
+              <div class="card"  style="width: 22%;max-height: 100%;border-radius: 10%;" v-for="(item, index) in n1">
+                <div class="row">
+                  <img class="card-img-top" :src="item.Image" alt="Card image cap"  style="max-width: 35%;">{{item.Name}}
+                <div class="card-body">
+                  <!-- <h5 class="card-title mt-2">{{item.Name}}</h5> -->
+                  <!-- <h6 class="card-subtitle mt-2 text-muted">Card subtitle</h6> -->
+                  <i class="fas fa-award" style="color: goldenrod;"></i>{{item.Price}}&nbsp;
+                    <i style="color: goldenrod;" class="fas fa-dot-circle"></i>{{item.Bet}}<br>
+                    <i style="color: goldenrod;" class="fas fa-trophy"></i>{{item.Wins}}&nbsp;
+                  <span class="badge bg-success" v-if="index==winIndex && upper">Winner</span>
+                  <span class="badge bg-Danger" v-else>Looser</span>
+
+                </div>
+                </div>
+               
+                </div>
+              </div>
+              <div class="row">
+                <div class="numberCircle" v-if="betBlock">{{betNum}}</div>
+              </div>
+             
+             
+              <div class="row">
+                <div class="card"  style="width: 22%;max-height: 100%;border-radius: 10%;" v-for="(item, index) in n2">
+                  <div class="row">
+                    <img class="card-img-top" :src="item.Image" alt="Card image cap"  style="max-width: 35%;">{{item.Name}}
+                  <div class="card-body"> 
+                     <!-- <h5 class="card-title mt-2">{{item.Name}}</h5> 
+                    <h6 class="card-subtitle mt-2 text-muted">Card subtitle</h6> -->
+               <i class="fas fa-award" style="color: goldenrod;"></i>{{item.Price}}&nbsp;
+               <i style="color: goldenrod;" class="fas fa-dot-circle"></i>{{item.Bet}}<br>       
+               <i style="color: goldenrod;" class="fas fa-trophy"></i>{{item.Wins}}&nbsp;
+                      <span class="badge bg-success" v-if="index==winIndex && !upper">Winner</span>
+                      <span class="badge bg-Danger" v-else>Looser</span>
+  
+                  </div>
+                  </div>
+                  </div>
+              </div>
+
+              <button type="button" @click="back" style="color: rgb(229, 226, 229);background-color: rgb(51, 50, 50);" class="btn btn-danger mt-2">Back</button>
+
+            </div>
+          </div>
+
+           
+       
+            <div class="row" v-else="!betBlock">
+            <div id="sidenav" class="col-md-2" style="background-color: rgb(222, 223, 228);height: 100vw;">
+                <i class='fas fa-dice' style='font-size:48px;color:#5c1fce;margin-left: 30%;margin-top: 3%;'></i>
+                <div class="media mt-2" v-for="(item, index) in checkedNames">
+                 
+                  <div class="media-left ml-2" >
+                    <img :src="item.Image" style="width: 15%;" class="media-object" >
+                   <span style="font-family: 'Times New Roman', Times, serif;"> {{item.Name}}&nbsp;
+                    <i style="color: goldenrod;" class="fas fa-trophy"></i>{{item.Wins}}</span>
+                  </div>
+              
+                  <div class="media-body mt-2 ml-2">
+                    <i style="color: goldenrod;" class="fas fa-dot-circle"></i>{{item.Bet}}&nbsp;
+                    <i class="fas fa-award" style="color: goldenrod;"></i>{{item.Price}} &nbsp;
+                    
+                  </div>
+                  </div>
+                  <div class="row" v-if="showStartButton">
+                <div class="col-2"></div>
+                  <button type="button" @click="startBet" style="color: #e5e3e9; background-color: #5c1fce;"
+                  class="btn btn-info ml-4 col-md-8 mt-2 text-center vertical-center">
+                    START</button><div class="col-2"></div>
+                  </div>
+            </div>
+            <div id="box" class="col-10">
+              <span style="color: #5c1fce;"><h5>Select Playing 9</h5></span>
+              
+              <div class="d-flex justify-content-between">
+              <div class="form-group has-search col-4 mb-3 mt-3">
+                <span class="fa fa-search form-control-feedback"></span>
+                <input type="text" class="form-control" v-model="userName" @input="searchingUser()" placeholder="Search">
+              </div>
+              <div class="btn-group col-2" role="group" aria-label="Basic example">
+               
+   <i class="fas fa-angle-left fa-3x" v-if="startIndex!=0 && pageno <=pages" @click="showTable('pre')"></i>
+                 <i class="fas fa-angle-right fa-3x" v-if="pageno <pages" @click="showTable('next')"></i>
+            </div>
+            </div>
+
+             
+                  <div class="table-responsive">
+                    <table class="table table-responsive d-md-table border">
+                      <thead>
+                        <tr>
+                            
+                            <th scope="col-1" class="text-nowrap"> SELECT</th>
+                        <th scope="col-5" class="text-nowrap">PLAYER NAME</th>
+                        <th scope="col-1" class="text-nowrap">LEVEL</th>
+                        <th scope="col-1" class="text-nowrap">AVATAR</th>
+                        <th scope="col-1" class="text-nowrap">
+                          BET  <i class="fas fa-sort cursor-pointer" 
+                          title="Sort" @click="sort($event,'Bet')" data-type="ASC"></i>
+                        </th>
+                        <th scope="col-1" class="text-nowrap">WINS</th>
+                        <th scope="col-1" class="text-nowrap">LOST</th>
+                        <th scope="col-1" class="text-nowrap">PRICE
+                          <i class="fas fa-sort cursor-pointer" 
+                          title="Sort" @click="sort($event,'Price')" data-type="ASC"></i>
+                        </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr v-for="(item, index) in usersCopy" :key="index">
+                          <td class="align-middle"  width="5%">
+                            <div>
+                            <input type="checkbox" :disabled="disable" :id="index" :value=item v-model="checkedNames" 
+                            @change="checkBox(item,$event)">
+                            </div>
+                        </td>
+
+                        <td class="align-middle" width="10%">{{item.Name}}</td>
+                        <td class="align-middle" width="10%">{{item.Level}}</td>
+                     
+                        <td class="align-middle" width="10%">  <img width=40px height=40px :src="item.Image" alt="Avatar" class="avatar"></td>
+                        <td class="align-middle" width="10%">{{item.Bet}}</td>
+                        <td class="align-middle" width="10%">{{item.Wins}}</td>
+                        <td class="align-middle" width="10%">{{item.Lost}}</td>
+                        <td class="align-middle" width="10%">{{item.Price}}</td>
+                        
+
+                        </tr>
+                      </tbody>
+                    </table>
+                   
+                  </div>
+                 
+            </div>
+          </div>
+        </div>
+        
+         
+    </body>
+</html>
